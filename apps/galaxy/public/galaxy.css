@@ -1,0 +1,1539 @@
+/* Galaxy control map. Deep space dark UI. Sans for UI, monospace reserved for terminal only. */
+
+:root {
+  --bg-void: #05070d;
+  --bg-panel: #0b0f1a;
+  --bg-panel-raised: #10162a;
+  --border-dim: #1e2740;
+  --text-main: #d8e0f0;
+  --text-dim: #7d8bab;
+  --text-faint: #4d5872;
+  --accent: #6ea8ff;
+  --accent-glow: rgba(110, 168, 255, 0.45);
+  --online: #52e0a8;
+  --online-glow: rgba(82, 224, 168, 0.55);
+  --offline: #4a5468;
+  --unknown: #e0b652;
+  --unknown-glow: rgba(224, 182, 82, 0.4);
+  --asleep: #9b6bdb;
+  --asleep-glow: rgba(155, 107, 219, 0.4);
+  --garrison: #2fd47f;
+  --visitor: #e0a83f;
+  --desktop: #6ea8ff;
+  --danger: #e05a5a;
+  /* Tab dot status colors (v1.6): local shell / tmux-backed (survives disconnect) /
+   * ephemeral (dies with the tab). Same hues as --garrison/--visitor/--danger above for
+   * palette continuity, named separately since that trio's own meaning has moved on. */
+  --tab-status-local: #2fd47f;
+  --tab-status-tmux: #e0a83f;
+  --tab-status-ephemeral: #e05a5a;
+  --sidebar-width: 300px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-void);
+  color: var(--text-main);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+#galaxy-canvas, #galaxy-canvas-3d {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--bg-void);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Offline banner */
+
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 8px 16px;
+  background: rgba(224, 90, 90, 0.15);
+  border-bottom: 1px solid rgba(224, 90, 90, 0.4);
+  color: #ffb9b9;
+  font-size: 13px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* Galaxy tree sidebar (persistent left panel, replaces the old right slide-in panel) */
+
+.galaxy-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-dim);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.sidebar-title-wrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sidebar-title:hover {
+  color: var(--text-main);
+}
+
+.sidebar-title-input {
+  width: 100%;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  color: var(--text-main);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 3px 6px;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sidebar-icon-btn {
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1;
+  padding: 3px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.sidebar-icon-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.sidebar-collapse-btn {
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sidebar-collapse-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.add-world-form {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-world-input {
+  width: 100%;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 13px;
+  padding: 7px 10px;
+}
+
+.add-world-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.add-world-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.add-world-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel-raised);
+  color: var(--text-main);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.add-world-btn:hover {
+  border-color: var(--accent);
+}
+
+.add-world-btn-create {
+  border-color: rgba(47, 212, 127, 0.35);
+}
+
+.sidebar-offline-note {
+  padding: 8px 16px;
+  font-size: 11.5px;
+  color: #ffb9b9;
+  background: rgba(224, 90, 90, 0.1);
+  border-bottom: 1px solid rgba(224, 90, 90, 0.25);
+  line-height: 1.4;
+}
+
+.galaxy-sidebar.collapsed {
+  width: 44px;
+}
+
+.galaxy-sidebar.collapsed .sidebar-title-wrap,
+.galaxy-sidebar.collapsed #btn-add-world,
+.galaxy-sidebar.collapsed .add-world-form,
+.galaxy-sidebar.collapsed .sidebar-offline-note,
+.galaxy-sidebar.collapsed .tree-row-name,
+.galaxy-sidebar.collapsed .tree-row-expansion,
+.galaxy-sidebar.collapsed .tree-icon-btn,
+.galaxy-sidebar.collapsed .archived-section {
+  display: none;
+}
+
+.galaxy-sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 14px 6px;
+}
+
+.galaxy-sidebar.collapsed .tree-row-header {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+/* Tree list */
+
+.tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+.tree-row {
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.tree-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.tree-row-header:hover {
+  background: var(--bg-panel-raised);
+}
+
+.tree-row.expanded .tree-row-header {
+  background: var(--bg-panel-raised);
+}
+
+.tree-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tree-status-dot.dot-online {
+  background: var(--online);
+  box-shadow: 0 0 6px var(--online-glow);
+}
+
+.tree-status-dot.dot-offline {
+  background: var(--offline);
+}
+
+.tree-status-dot.dot-asleep {
+  background: var(--asleep);
+  box-shadow: 0 0 6px var(--asleep-glow);
+}
+
+.tree-status-dot.dot-unknown {
+  background: var(--unknown);
+  opacity: 0.55;
+}
+
+.tree-row-name {
+  font-size: 13.5px;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-row-name-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  color: var(--text-main);
+  font-size: 13.5px;
+  padding: 2px 6px;
+}
+
+.tree-icon-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-faint);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tree-icon-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.tree-pin-btn.active {
+  color: var(--unknown);
+  border-color: rgba(224, 182, 82, 0.4);
+}
+
+.tree-archive-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.tree-row-expansion {
+  padding: 2px 16px 18px;
+  display: none;
+}
+
+.tree-row.expanded .tree-row-expansion {
+  display: block;
+}
+
+.tree-expansion-kind {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.status-pill {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.status-online {
+  background: rgba(82, 224, 168, 0.15);
+  color: var(--online);
+  border: 1px solid rgba(82, 224, 168, 0.4);
+}
+
+.status-offline {
+  background: rgba(74, 84, 104, 0.2);
+  color: var(--text-dim);
+  border: 1px solid var(--border-dim);
+}
+
+.status-unknown {
+  background: rgba(224, 182, 82, 0.15);
+  color: var(--unknown);
+  border: 1px solid rgba(224, 182, 82, 0.4);
+}
+
+.status-asleep {
+  background: rgba(155, 107, 219, 0.15);
+  color: var(--asleep);
+  border: 1px solid rgba(155, 107, 219, 0.4);
+}
+
+.sleep-warning {
+  background: rgba(224, 182, 82, 0.1);
+  border: 1px solid rgba(224, 182, 82, 0.3);
+  color: var(--unknown);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.asleep-notice {
+  background: rgba(155, 107, 219, 0.1);
+  border: 1px solid rgba(155, 107, 219, 0.35);
+  color: var(--asleep);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.tree-section-title {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-faint);
+  margin: 10px 0 6px;
+}
+
+.bases-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bases-list li {
+  position: relative; /* anchors .base-remove-btn */
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bases-list li:hover {
+  border-color: var(--accent);
+  background: #131b32;
+}
+
+.base-card-main {
+  padding-right: 22px; /* room for the remove button so long session names never sit under it */
+}
+
+.base-session-name {
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.base-meta {
+  color: var(--text-faint);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.tree-bases-empty {
+  color: var(--text-faint);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Base card remove control: hover-revealed, click opens an inline confirm in place of the
+ * card content (no browser confirm(), matches the panel's own aesthetic). */
+.base-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  text-align: center;
+  padding: 0;
+  border: 1px solid var(--border-dim);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  color: var(--text-faint);
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.bases-list li:hover .base-remove-btn {
+  opacity: 1;
+}
+
+.base-remove-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.base-remove-confirm-text {
+  font-size: 12px;
+  color: var(--text-main);
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.base-remove-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.base-remove-cancel-btn,
+.base-remove-confirm-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.base-remove-cancel-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.base-remove-confirm-btn {
+  border-color: rgba(224, 90, 90, 0.5);
+  color: var(--danger);
+}
+
+.base-remove-confirm-btn:hover:not(:disabled) {
+  background: rgba(224, 90, 90, 0.12);
+}
+
+.base-remove-cancel-btn:disabled,
+.base-remove-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Moons section: same visual language as Bases above (card + hover-revealed remove +
+ * inline confirm), but rows aren't clickable -- moons have no Travel/status wiring yet
+ * (see "MOONS AS CONNECTABLE MACHINES" in todo_galaxy_map.md), so no pointer cursor.
+ * The section itself is collapsible (see .moons-section-header/.moons-section-body
+ * below) since it otherwise eats a lot of vertical space between Bases and the
+ * Travel/Deploy/Desktop actions. */
+.moons-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.moons-section-header:hover {
+  color: var(--text-main);
+}
+
+.moons-chevron {
+  display: inline-block;
+  font-size: 9px;
+  transition: transform 0.15s ease;
+}
+
+.moons-chevron.open {
+  transform: rotate(90deg);
+}
+
+/* Label eats the remaining header width so the (+) button below sits flush right,
+ * same visual spot as the sidebar's own "+" (see .sidebar-icon-btn). */
+.moons-header-label {
+  flex: 1;
+}
+
+.moons-add-btn {
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1;
+  padding: 1px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.moons-add-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.moons-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.moons-list li {
+  position: relative; /* anchors .moon-remove-btn */
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  font-size: 13px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.moon-card-main {
+  padding-right: 22px; /* room for the remove button so long names never sit under it */
+}
+
+.moon-name {
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.moon-target {
+  color: var(--text-faint);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.moon-travel-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.moon-travel-btn {
+  padding: 3px 10px;
+  border: 1px solid rgba(224, 168, 63, 0.35);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  color: var(--text-main);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.moon-travel-btn:hover {
+  border-color: rgba(224, 168, 63, 0.7);
+  background: #131b32;
+}
+
+.tree-moons-empty {
+  color: var(--text-faint);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.moon-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  text-align: center;
+  padding: 0;
+  border: 1px solid var(--border-dim);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  color: var(--text-faint);
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.moons-list li:hover .moon-remove-btn {
+  opacity: 1;
+}
+
+.moon-remove-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.moon-remove-confirm-text {
+  font-size: 12px;
+  color: var(--text-main);
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.moon-remove-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.moon-remove-cancel-btn,
+.moon-remove-confirm-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.moon-remove-cancel-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.moon-remove-confirm-btn {
+  border-color: rgba(224, 90, 90, 0.5);
+  color: var(--danger);
+}
+
+.moon-remove-confirm-btn:hover:not(:disabled) {
+  background: rgba(224, 90, 90, 0.12);
+}
+
+.moon-remove-cancel-btn:disabled,
+.moon-remove-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.moon-add-toggle-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px dashed var(--border-dim);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.moon-add-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
+.moon-add-form {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.moon-add-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.moon-add-actions .moon-add-btn {
+  flex: 1;
+}
+
+.moon-add-cancel-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.moon-add-cancel-btn:hover {
+  border-color: var(--accent);
+}
+
+.moon-add-input {
+  width: 100%;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 12.5px;
+  padding: 6px 9px;
+}
+
+.moon-add-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.moon-add-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(47, 212, 127, 0.35);
+  background: var(--bg-panel-raised);
+  color: var(--text-main);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.moon-add-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.moon-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tree-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel-raised);
+  color: var(--text-main);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  text-align: left;
+}
+
+.action-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #131b32;
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.action-travel {
+  border-color: rgba(224, 168, 63, 0.35);
+}
+
+.action-deploy {
+  border-color: rgba(47, 212, 127, 0.35);
+}
+
+.action-row {
+  position: relative;
+}
+
+.action-btn.has-info-tip {
+  padding-right: 36px;
+}
+
+/* Small muted "?" circle that sits at the right edge of an action button (or the moon
+   Remote Control button) and shows an explainer popup on hover/focus. Its parent must be
+   position:relative (.action-row / .deploy-wrap already are; .moon-travel-row uses flex
+   layout instead, see .small below). */
+.info-tip-btn {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  line-height: 16px;
+  padding: 0;
+  border: 1px solid var(--border-dim);
+  border-radius: 50%;
+  background: var(--bg-panel);
+  color: var(--text-faint);
+  font-size: 11px;
+  text-align: center;
+  cursor: help;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.info-tip-btn:hover,
+.info-tip-btn:focus {
+  border-color: var(--accent);
+  color: var(--text-main);
+  outline: none;
+}
+
+/* Used inside .moon-travel-row, a flex row rather than a position:relative box, so the
+   "?" sits inline next to the button instead of absolutely positioned over it. */
+.info-tip-btn.small {
+  position: static;
+  transform: none;
+  width: 15px;
+  height: 15px;
+  line-height: 13px;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.info-tooltip-popup {
+  position: fixed;
+  z-index: 50;
+  max-width: 240px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-main);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.deploy-wrap {
+  position: relative;
+}
+
+.deploy-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 7px;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.deploy-option {
+  padding: 9px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.deploy-option:hover {
+  background: rgba(110, 168, 255, 0.12);
+}
+
+.tree-offline-reason {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.4;
+  margin-top: 10px;
+}
+
+/* Archived worlds: collapsed-by-default section at the bottom of the tree */
+
+.archived-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-dim);
+}
+
+.archived-header {
+  padding: 10px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.archived-header:hover {
+  color: var(--text-dim);
+}
+
+.archived-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px 10px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.archived-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.archived-row:last-child {
+  border-bottom: none;
+}
+
+.archived-row-name {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Terminal drawer */
+
+.terminal-drawer {
+  position: fixed;
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  height: 50vh;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-dim);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, height 0.25s ease;
+}
+
+.terminal-drawer.collapsed {
+  transform: translateY(calc(100% - 34px));
+}
+
+/* Tall mode ("^" button): fills the full right-side height, left/right unchanged so the
+   sidebar (which sits outside this element entirely) stays visible and functional. z-index
+   raised above .map-toolbar's 55 (same reasoning as .fullscreen's z-index: 60 below) --
+   otherwise the floating Align/Freeze/Fit/3D buttons stay pinned on top of the now-tall
+   drawer's own top edge, covering and intercepting clicks meant for the drawer handle. */
+.terminal-drawer.expanded {
+  height: 100vh;
+  z-index: 56;
+}
+
+.terminal-drawer.fullscreen {
+  position: fixed;
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 60;
+  transform: none;
+}
+
+.drawer-handle {
+  height: 34px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  cursor: pointer;
+  background: var(--bg-panel-raised);
+  border-bottom: 1px solid var(--border-dim);
+  user-select: none;
+}
+
+.drawer-handle-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.drawer-handle-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tab-filter-toggle {
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tab-filter-toggle:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.tab-filter-toggle.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(110, 168, 255, 0.12);
+}
+
+.drawer-handle-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawer-fullscreen-btn {
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.drawer-fullscreen-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.drawer-handle-toggle {
+  color: var(--text-dim);
+  font-size: 13px;
+  transition: transform 0.2s ease;
+}
+
+.terminal-drawer.collapsed .drawer-handle-toggle {
+  transform: rotate(180deg);
+}
+
+.map-toolbar {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 55;
+  display: flex;
+  gap: 8px;
+}
+
+.map-fit-btn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel-raised);
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.map-fit-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.map-fit-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(110, 168, 255, 0.12);
+}
+
+.drawer-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+
+.drawer-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+
+.drawer-tab.active {
+  color: var(--text-main);
+  border-color: var(--accent);
+}
+
+/* Forgiving hover/click target around the small dot (~16px) without inflating its
+ * visual size; also the mount point for the persistence tooltip listeners. */
+.tab-dot-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Status colors, not the map ship's paired color (that pairing is map-ships-only now):
+ * green = local shell, yellow = tmux-backed (survives disconnect), red = ephemeral
+ * (dies with the tab). --dot-color is set per-tab in JS to one of the three vars above. */
+.tab-ship-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--dot-color, currentColor);
+  background: transparent;
+}
+
+/* Filled = garrison-deployed or a local shell; hollow = travel/base-reattach or an
+ * ephemeral (desktop) tab. Same color, this is the extra persistence signal within it. */
+.tab-ship-dot.filled {
+  background: var(--dot-color, currentColor);
+  border-color: transparent;
+}
+
+/* Garrison only: a subtle fixed ring on top of the filled yellow, since a deployed agent
+ * is the one state worth calling out beyond color+fill alone. */
+.tab-ship-dot.garrison-ring {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18), 0 0 4px var(--dot-color, transparent);
+}
+
+.tab-name {
+  cursor: text;
+}
+
+.tab-name-input {
+  width: 90px;
+  font: inherit;
+  color: inherit;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.tab-close {
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.tab-close:hover {
+  color: var(--danger);
+}
+
+.drawer-panes {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.drawer-pane {
+  position: absolute;
+  inset: 0;
+  padding: 8px;
+  display: none;
+}
+
+.drawer-pane.active {
+  display: block;
+}
+
+.xterm-wrap {
+  width: 100%;
+  height: 100%;
+  font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+}
+
+/* Quiet-cursor: with hide/show already coalesced away (see coalesceCursorToggles
+   in app.js), the cursor is always VISIBLE, so a burst of output that relocates
+   it between the status line and the input line dozens of times a second (codex
+   "Working..." spinner, a resume-load replay) reads as flicker on its own, with
+   no hide/show involved. This class is toggled on the tab's .xterm-wrap only
+   while a sustained burst is landing (see noteWriteForQuietCursor/armQuietCursor
+   in openTab -- gated on write FREQUENCY, not size, since a single keystroke's
+   echo and one tick of a burst land in the same byte-size range) and lifts again
+   about 300ms after output goes quiet, so the cursor stays visible while you are
+   actually typing. !important guards against xterm's own inline styling on the
+   cursor element winning over this rule by specificity. */
+.xterm-wrap.quiet-cursor .xterm-cursor {
+  opacity: 0 !important;
+}
+
+.tab-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #0b0f1a;
+}
+
+.sun-doc-content {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 14px;
+  box-sizing: border-box;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-main);
+  background: #0b0f1a;
+}
+
+.drawer-empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Ship hover tooltip */
+
+.ship-tooltip {
+  position: fixed;
+  z-index: 45;
+  pointer-events: none;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11.5px;
+  color: var(--text-main);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  white-space: pre-line;
+}
+
+/* Freighter cargo manifest: same tooltip element, multiple lines (header + app names) */
+.ship-tooltip.multiline {
+  padding: 8px 12px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+/* Toast notifications */
+
+.toast-stack {
+  position: fixed;
+  bottom: calc(50vh + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 7px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  color: var(--text-main);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+/* Close-tab popup: shown for tmux-backed remote tabs (garrison, or a non-local visitor
+ * xterm session) so keeping the session alive vs. ending it is always an explicit choice,
+ * not a silent side effect of closing the tab. */
+
+.close-tab-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 7, 13, 0.6);
+}
+
+.close-tab-popup-panel {
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.close-tab-popup-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.close-tab-popup-text {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.close-tab-popup-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+
+.close-tab-popup-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.close-tab-popup-btn {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.close-tab-popup-btn-primary {
+  color: var(--text-main);
+  border-color: rgba(110, 168, 255, 0.4);
+}
+
+.close-tab-popup-btn-primary:hover {
+  border-color: var(--accent);
+  background: #131b32;
+}
+
+.close-tab-popup-btn-danger {
+  color: var(--danger);
+  border-color: rgba(224, 90, 90, 0.4);
+}
+
+.close-tab-popup-btn-danger:hover {
+  background: rgba(224, 90, 90, 0.12);
+}
+
+/* Shared modal (v2.6): backdrop + centered card, used by openAddMoonModal and
+ * openAddWorldModal (see public/app.js) so both flows look identical. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 13, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-card {
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 12px;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.modal-input {
+  width: 100%;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 13px;
+  padding: 7px 10px;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-cancel-btn,
+.modal-submit-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-panel-raised);
+  color: var(--text-main);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.modal-cancel-btn:hover {
+  border-color: var(--accent);
+}
+
+.modal-submit-btn {
+  border-color: rgba(47, 212, 127, 0.35);
+}
+
+.modal-submit-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.modal-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

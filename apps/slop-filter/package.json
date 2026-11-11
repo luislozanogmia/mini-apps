@@ -1,0 +1,11 @@
+{
+  "name": "slop-filter",
+  "version": "0.1.15",
+  "private": true,
+  "description": "Local-first, personal LinkedIn feed filter",
+  "scripts": {
+    "test": "node --test tests/engine.test.cjs",
+    "package": "python3 scripts/package.py"
+  },
+  "license": "MIT"
+}

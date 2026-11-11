@@ -1,0 +1,29 @@
+/* Never alter LinkedIn's own inline styles or child visibility attributes. */
+.sf-filter-collapsed > :not(.sf-filter-control) { display: none !important; }
+.sf-filter-control { display: block !important; width: 100%; min-width: 0; box-sizing: border-box; contain: inline-size; }
+
+/* Tie the notice and the revealed original post together without shifting layout. */
+.sf-filter-revealed {
+  outline: 3px solid #24634f !important;
+  outline-offset: -3px !important;
+  border-radius: 10px !important;
+}
+
+/* Only recognized desktop feed columns; remove our classes to restore LinkedIn. */
+@media (min-width: 992px) {
+  .sf-feed-layout.sf-hide-left, .sf-feed-layout.sf-hide-right {
+    display: grid !important;
+    grid-template-areas: none !important;
+    grid-template-columns: var(--sf-left, minmax(180px, 225px)) minmax(0, 1fr) var(--sf-right, minmax(240px, 300px)) !important;
+  }
+  .sf-feed-layout.sf-hide-left { --sf-left: 0px; }
+  .sf-feed-layout.sf-hide-right { --sf-right: 0px; }
+  .sf-feed-layout.sf-hide-left > .sf-feed-left, .sf-feed-layout.sf-hide-right > .sf-feed-right { display: none !important; }
+  .sf-feed-layout > .sf-feed-left { grid-area: auto !important; grid-column: 1 !important; grid-row: 1 !important; }
+  .sf-feed-layout > .sf-feed-center { grid-area: auto !important; grid-column: 2 !important; grid-row: 1 !important; min-width: 0 !important; width: 100% !important; max-width: none !important; }
+  .sf-feed-layout > .sf-feed-right { grid-area: auto !important; grid-column: 3 !important; grid-row: 1 !important; }
+}
+
+.sf-layout-control { position: fixed !important; height: 28px !important; z-index: 5; pointer-events: none !important; }
+.sf-layout-control[hidden] { display: none !important; }
+@media (max-width: 991px) { .sf-layout-control { display: none !important; } }

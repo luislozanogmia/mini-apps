@@ -1,0 +1,13 @@
+{
+  "name": "galaxy-desktop",
+  "version": "1.0.0",
+  "description": "Electron desktop shell for the Galaxy multiverse control map",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "43.1.0"
+  }
+}

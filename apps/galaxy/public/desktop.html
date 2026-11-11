@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy | Desktop</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #0b0f1a;
+    overflow: hidden;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  #status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #d8e0f0;
+    background: rgba(16, 22, 42, 0.9);
+    border-bottom: 1px solid #1e2740;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #status-text.state-connecting { color: #e0b652; }
+  #status-text.state-connected { color: #52e0a8; }
+  #status-text.state-disconnected { color: #e05a5a; }
+  #reconnect-btn {
+    display: none;
+    padding: 3px 10px;
+    border-radius: 5px;
+    border: 1px solid #1e2740;
+    background: #10162a;
+    color: #d8e0f0;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  #reconnect-btn:hover {
+    border-color: #6ea8ff;
+  }
+  #screen {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+</style>
+</head>
+<body>
+
+  <div id="status-bar">
+    <span id="status-text" class="state-connecting">Connecting...</span>
+    <button id="reconnect-btn">Reconnect</button>
+  </div>
+
+  <div id="screen"></div>
+
+  <script type="module">
+    import RFB from '/vendor/novnc/core/rfb.js';
+
+    var params = new URLSearchParams(window.location.search);
+    var planetId = params.get('planet');
+    var statusText = document.getElementById('status-text');
+    var reconnectBtn = document.getElementById('reconnect-btn');
+    var screen = document.getElementById('screen');
+    var rfb = null;
+
+    function setStatus(state, message) {
+      statusText.textContent = message;
+      statusText.className = 'state-' + state;
+      reconnectBtn.style.display = (state === 'disconnected') ? 'inline-block' : 'none';
+    }
+
+    function wsUrl() {
+      var scheme = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+      return scheme + location.host + '/vnc?planet=' + encodeURIComponent(planetId || '');
+    }
+
+    function connect() {
+      if (!planetId) {
+        setStatus('disconnected', 'No planet specified.');
+        return;
+      }
+
+      setStatus('connecting', 'Connecting...');
+      screen.innerHTML = '';
+
+      try {
+        rfb = new RFB(screen, wsUrl());
+      } catch (err) {
+        setStatus('disconnected', 'Failed to start: ' + err.message);
+        return;
+      }
+
+      rfb.scaleViewport = true;
+      rfb.resizeSession = false;
+
+      rfb.addEventListener('connect', function () {
+        setStatus('connected', 'Connected.');
+      });
+
+      rfb.addEventListener('disconnect', function (evt) {
+        var reason = (evt.detail && evt.detail.clean === false)
+          ? 'Connection lost.'
+          : 'Disconnected.';
+        setStatus('disconnected', reason);
+      });
+
+      rfb.addEventListener('credentialsrequired', function () {
+        setStatus('disconnected', 'Server requested credentials (not supported).');
+      });
+    }
+
+    reconnectBtn.addEventListener('click', connect);
+    connect();
+  </script>
+</body>
+</html>

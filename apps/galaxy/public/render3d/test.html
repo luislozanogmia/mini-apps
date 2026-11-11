@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy | Three.js Renderer Test</title>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #05070d; color: #d8e0f0;
+    font-family: -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+
+  .toolbar { position: fixed; top: 14px; right: 14px; z-index: 20; display: flex; gap: 8px; }
+  .toolbar button {
+    padding: 6px 14px; border-radius: 7px; border: 1px solid #1e2740; background: #10162a;
+    color: #7d8bab; font-size: 12px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+  }
+  .toolbar button:hover { color: #d8e0f0; border-color: #6ea8ff; }
+  .toolbar button.active { color: #6ea8ff; border-color: #6ea8ff; background: rgba(110,168,255,0.12); }
+
+  #hud { position: fixed; top: 14px; left: 14px; z-index: 20; background: #0b0f1a; border: 1px solid #1e2740;
+    border-radius: 8px; padding: 10px 14px; font-size: 12px; line-height: 1.6; color: #7d8bab; max-width: 340px; }
+  #hud b { color: #d8e0f0; }
+  #hud .fps { color: #52e0a8; }
+
+  #tooltip { position: fixed; z-index: 30; pointer-events: none; background: #10162a; border: 1px solid #1e2740;
+    border-radius: 6px; padding: 5px 9px; font-size: 11.5px; color: #d8e0f0; box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    white-space: pre-line; display: none; }
+</style>
+</head>
+<body>
+  <div id="stage"><canvas id="galaxy-canvas-3d"></canvas></div>
+
+  <div id="hud">
+    <div><b>Galaxy Three.js render test</b></div>
+    <div>Status: <span id="status">loading...</span></div>
+    <div>Planets: <span id="planet-count">-</span> | Ships (demo): <span id="ship-count">-</span></div>
+    <div>FPS: <span id="fps" class="fps">-</span></div>
+    <div>Last click/hover: <span id="last-hit">none</span></div>
+    <div style="margin-top:6px;color:#4d5872;">Drag = orbit camera, wheel = zoom, dblclick empty space = reset.</div>
+  </div>
+
+  <div class="toolbar">
+    <button id="btn-align">Align</button>
+    <button id="btn-freeze">Freeze</button>
+    <button id="btn-fit">Fit</button>
+  </div>
+
+  <div id="tooltip"></div>
+
+  <script type="module">
+    import { initRenderer3D } from './renderer3d.js';
+    import { createDemoData } from './demo-data.js';
+
+    var canvas = document.getElementById('galaxy-canvas-3d');
+    var statusEl = document.getElementById('status');
+    var planetCountEl = document.getElementById('planet-count');
+    var shipCountEl = document.getElementById('ship-count');
+    var fpsEl = document.getElementById('fps');
+    var lastHitEl = document.getElementById('last-hit');
+    var tooltipEl = document.getElementById('tooltip');
+    var btnAlign = document.getElementById('btn-align');
+    var btnFreeze = document.getElementById('btn-freeze');
+    var btnFit = document.getElementById('btn-fit');
+
+    var demo = createDemoData();
+    var handle = null;
+    window.__demo = demo; // stress-test / debug hook only, not part of the render contract
+
+    demo.load().then(function (planets) {
+      statusEl.textContent = 'live (' + planets.length + ' planets from /api/planets)';
+      planetCountEl.textContent = planets.length;
+      shipCountEl.textContent = demo.state.ships.length;
+
+      handle = initRenderer3D(canvas, demo.dataProvider, {
+        onClick: function (hit) { lastHitEl.textContent = hit.kind + ':' + hit.id; },
+        onEmptyClick: function () { lastHitEl.textContent = '(empty space)'; },
+        onHover: function (hit, x, y) {
+          tooltipEl.style.display = 'block';
+          tooltipEl.style.left = (x + 14) + 'px';
+          tooltipEl.style.top = (y + 14) + 'px';
+          tooltipEl.textContent = hit.kind + ': ' + hit.id;
+        },
+        onHoverEnd: function () { tooltipEl.style.display = 'none'; }
+      });
+    }).catch(function (err) {
+      statusEl.textContent = 'FAILED: ' + err.message;
+    });
+
+    // drives demo's own orbitClock/wall-clock ticking; renderer3d.js does NOT
+    // advance any clock itself, it only reads dataProvider each frame.
+    function driveClock(ts) {
+      demo.tick(ts);
+      requestAnimationFrame(driveClock);
+    }
+    requestAnimationFrame(driveClock);
+
+    // simple FPS counter, separate from the render loop so it works even if
+    // initRenderer3D changes internally.
+    var frames = 0, lastFpsTime = performance.now();
+    function countFrame() {
+      frames++;
+      var now = performance.now();
+      if (now - lastFpsTime >= 1000) {
+        fpsEl.textContent = frames;
+        frames = 0;
+        lastFpsTime = now;
+      }
+      requestAnimationFrame(countFrame);
+    }
+    requestAnimationFrame(countFrame);
+
+    btnFreeze.addEventListener('click', function () {
+      demo.toggleFreeze();
+      btnFreeze.classList.toggle('active', demo.state.frozen);
+    });
+    btnAlign.addEventListener('click', function () {
+      demo.triggerAlign();
+    });
+    btnFit.addEventListener('click', function () {
+      if (handle) handle.resetCamera();
+    });
+  </script>
+</body>
+</html>

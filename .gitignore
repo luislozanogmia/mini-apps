@@ -1,0 +1,16 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+!.env.example
+output/
+.playwright/
+.playwright-cli/
+*.log
+apps/galaxy/config.json
+apps/galaxy/planets.json
+apps/galaxy/backups/
+harness/contextrag/data/
+.venv/

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy | Galaxy Control Map</title>
+<link rel="stylesheet" href="/vendor/xterm/xterm.css">
+<link rel="stylesheet" href="galaxy.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "/render3d/vendor/three.module.min.js"
+  }
+}
+</script>
+</head>
+<body>
+
+  <div id="offline-banner" class="offline-banner hidden">
+    Server offline, map running on cached charts.
+  </div>
+
+  <canvas id="galaxy-canvas"></canvas>
+  <canvas id="galaxy-canvas-3d" class="hidden"></canvas>
+
+  <div id="galaxy-sidebar" class="galaxy-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title-wrap">
+        <span id="sidebar-title" class="sidebar-title" title="Click to rename">Galaxy</span>
+        <input id="sidebar-title-input" class="sidebar-title-input hidden" type="text" maxlength="60">
+      </div>
+      <div class="sidebar-header-actions">
+        <button id="btn-add-world" class="sidebar-icon-btn" title="Add a new world">+</button>
+        <button id="btn-sidebar-collapse" class="sidebar-collapse-btn" title="Collapse sidebar">&lt;</button>
+      </div>
+    </div>
+    <div id="add-world-form" class="add-world-form hidden">
+      <input id="add-world-name" class="add-world-input" type="text" placeholder="World name">
+      <input id="add-world-ssh" class="add-world-input" type="text" placeholder="SSH target (optional)">
+      <div class="add-world-actions">
+        <button id="btn-add-world-create" class="add-world-btn add-world-btn-create">Create</button>
+        <button id="btn-add-world-cancel" class="add-world-btn add-world-btn-cancel">Cancel</button>
+      </div>
+    </div>
+    <div id="sidebar-offline-note" class="sidebar-offline-note hidden">
+      Cached charts. Live details unavailable until the server answers.
+    </div>
+    <ul id="tree-list" class="tree-list"></ul>
+    <div id="archived-section" class="archived-section hidden">
+      <div id="archived-header" class="archived-header">Archived (0)</div>
+      <ul id="archived-list" class="archived-list hidden"></ul>
+    </div>
+  </div>
+
+  <div class="map-toolbar">
+    <button id="btn-map-align" class="map-fit-btn" title="Align all worlds through the sun">Align</button>
+    <button id="btn-map-freeze" class="map-fit-btn" title="Freeze orbital motion">Freeze</button>
+    <button id="btn-map-fit" class="map-fit-btn" title="Reset zoom and pan">Fit</button>
+    <!-- 3D mode retired (2026-07-09, product decision) -- button hidden, not deleted. The
+         wiring in app.js (toggleRender3D etc.) and public/render3d/ stay on disk untouched. -->
+    <button id="btn-map-renderer" class="map-fit-btn hidden" title="Toggle 3D render layer">3D</button>
+  </div>
+
+  <div id="terminal-drawer" class="terminal-drawer collapsed">
+    <div class="drawer-handle" id="drawer-handle">
+      <div class="drawer-handle-left">
+        <span class="drawer-handle-label">Terminals</span>
+        <button id="btn-tab-filter-toggle" class="tab-filter-toggle hidden" title="Show tabs from every planet">Show all</button>
+      </div>
+      <div class="drawer-handle-right">
+        <button id="btn-drawer-fullscreen" class="drawer-fullscreen-btn" title="Toggle fullscreen terminals">Fullscreen</button>
+        <span class="drawer-handle-toggle" id="drawer-toggle" title="Expand terminal">^</span>
+      </div>
+    </div>
+    <div class="drawer-tabs" id="drawer-tabs"></div>
+    <div id="drawer-empty-note" class="drawer-empty hidden"></div>
+    <div class="drawer-panes" id="drawer-panes"></div>
+  </div>
+
+  <div id="toast-stack" class="toast-stack"></div>
+
+  <div id="ship-tooltip" class="ship-tooltip hidden"></div>
+
+  <div id="close-tab-popup" class="close-tab-popup hidden">
+    <div class="close-tab-popup-panel">
+      <div class="close-tab-popup-title">Do you want to return to this terminal later?</div>
+      <div class="close-tab-popup-text">The session keeps running on the planet either way unless you end it below.</div>
+      <label class="close-tab-popup-checkbox-row">
+        <input type="checkbox" id="close-tab-popup-checkbox">
+        Do not show me this again
+      </label>
+      <div class="close-tab-popup-actions">
+        <button id="close-tab-popup-no" class="close-tab-popup-btn close-tab-popup-btn-danger" type="button">No, end it now</button>
+        <button id="close-tab-popup-yes" class="close-tab-popup-btn close-tab-popup-btn-primary" type="button">Yes, keep it running</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/xterm/xterm.js"></script>
+  <script src="/vendor/xterm-fit/addon-fit.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

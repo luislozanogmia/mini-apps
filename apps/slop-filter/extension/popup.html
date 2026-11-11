@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Slop Filter · Tune your feed</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+<header><div class="brand"><img src="icons/48.png" width="36" height="36" alt=""><div><strong>slop filter<span class="dot">.</span></strong></div></div><label class="switch"><input type="checkbox" id="enabled" aria-label="Enable filtering"><span></span></label></header>
+<main>
+  <section class="intro"><span class="pill" id="state-label">LOCAL & PRIVATE</span><h1>A feed you can stand.</h1><p>Pick the tells that make you scroll past.<br>We’ll fold those posts out of the way.</p></section>
+  <section aria-labelledby="layout-heading"><h2 id="layout-heading">Feed layout</h2><label class="layout-option"><input id="hide-left" type="checkbox">Hide left sidebar</label><label class="layout-option"><input id="hide-right" type="checkbox">Hide right sidebar</label></section>
+  <section aria-labelledby="tells-heading"><div class="section-heading"><h2 id="tells-heading">Your personal tells</h2><span id="selected-count" class="muted"></span></div><div id="tells"></div></section>
+  <section><label for="phrases" class="field-title">Words you’re done with</label><p class="muted">One phrase per line. Case-insensitive, literal matches.</p><textarea id="phrases" rows="3" placeholder="let’s unpack this&#10;thrilled to announce" maxlength="3030" spellcheck="false"></textarea><div class="field-footer"><span class="muted">Up to 30 phrases · 2–100 characters each</span><button id="save-phrases" class="small-button">Save phrases</button></div></section>
+  <section class="magnet"><div><label for="mode" class="field-title">Slop Magnet 🧲</label><p class="muted">Feeling brave? Show only matching posts.</p></div><input type="checkbox" id="mode" aria-label="Slop Magnet mode"></section>
+  <section class="share" aria-label="Filter presets"><label class="sr-only" for="preset-name">Preset name</label><input id="preset-name" type="text" maxlength="80" value="My slop filter" placeholder="Give your filter a name"><div class="button-row"><button id="export" class="primary">Export preset ↗</button><button id="import">Import preset</button></div><input type="file" id="import-file" accept="application/json,.json" hidden><div id="import-preview" hidden><h3 id="import-name"></h3><p id="import-summary"></p><ul id="import-details"></ul><div class="button-row"><button id="apply-import" class="primary">Apply this preset</button><button id="cancel-import">Cancel</button></div></div></section>
+  <details class="try-it"><summary>Try a post before you scroll</summary><label class="sr-only" for="sample">Post text</label><textarea id="sample" rows="4" placeholder="Paste a post here. Nothing leaves this device."></textarea><div id="sample-result" aria-live="polite">Paste some text to see what matches.</div></details>
+  <section><h2>Authors you ❤️</h2><div id="loved-authors"></div></section>
+  <footer><p>Made for fun, no support and everything is local</p></footer>
+</main>
+<div id="status" role="status" aria-live="polite"></div>
+<script src="engine.js"></script><script src="popup.js"></script>
+</body></html>
