@@ -19,7 +19,7 @@ Export/import a preset to share tells and custom phrases. Favorite authors and l
 
 These are writing preferences, not proof of AI authorship. Image-only matching checks image presence and caption absence; it does not read text inside an image.
 
-LinkedIn's [published policy](https://www.linkedin.com/help/linkedin/answer/a1341387/) prohibits extensions that modify its appearance and says prohibited-tool use can lead to account restriction. This extension changes the feed's appearance.
+LinkedIn's [published policy](https://www.linkedin.com/help/linkedin/answer/a1341387/) prohibits extensions that modify its appearance and says prohibited-tool use can lead to account restriction. This extension changes the feed's appearance. Use are your own risk.
 
 ## Development
 
